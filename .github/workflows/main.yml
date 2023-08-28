@@ -48,12 +48,17 @@ jobs:
             done
           done
 
+      - name: Create and Checkout a New Branch
+        run: |
+          git checkout -b temp-branch
+        continue-on-error: true
+
       - name: Commit and Push Changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             git add ".env.example"
             git commit -m "Update .env.example"
-            git push
+            git push origin temp-branch
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
