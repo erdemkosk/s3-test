@@ -18,6 +18,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
+      - name: Get Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@v8
+
       - name: Get Current Directory
         run: |
           current_directory=$(pwd)
@@ -28,11 +32,11 @@ jobs:
             touch "$current_directory/.env.example"
           fi
 
-          # PR içeriğindeki dosyaları işle
-          pr_diff=$(git diff --name-only origin/main...${{ github.event.pull_request.head.ref }})
-
-          # PR içeriğindeki dosyalarda process.env değerlerini ara
-          for file in $pr_diff; do
+          # Değiştirilen dosyaları al
+          changed_files="${{ steps.changed-files.outputs.all }}"
+          
+          # Değiştirilen dosyalarda process.env değerlerini ara
+          for file in $changed_files; do
             file_content=$(<"$current_directory/$file")
             process_env_values=$(echo "$file_content" | grep -Eo 'process\.env\.[A-Za-z_][A-Za-z_0-9]*')
 
