@@ -1,4 +1,4 @@
-name: Check and Update .env.example on PR
+name: Update .env.example on PR
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  check-update-env-example:
+  update-env-example:
     runs-on: ubuntu-latest
 
     steps:
@@ -48,17 +48,17 @@ jobs:
             done
           done
 
-      - name: Create and Checkout a New Branch
-        run: |
-          git checkout -b temp-branch
-        continue-on-error: true
-
-      - name: Commit and Push Changes to PR Branch
+      - name: Commit Changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             git add ".env.example"
             git commit -m "Update .env.example"
-            git push origin HEAD:temp-branch
+          fi
+
+      - name: Push Changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git push origin HEAD
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
