@@ -29,7 +29,7 @@ jobs:
           fi
 
           # PR içeriğindeki dosyaları işle
-          pr_diff=$(git diff --name-only HEAD^)
+          pr_diff=$(git diff --name-only origin/main...${{ github.event.pull_request.head.ref }})
 
           # PR içeriğindeki dosyalarda process.env değerlerini ara
           for file in $pr_diff; do
