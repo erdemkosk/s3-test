@@ -16,59 +16,40 @@ jobs:
           git config --global user.name "Erdem Köşk"
 
       - name: Check out code
-        uses: actions/checkout@v2  # GitHub Actions'ın önceden tanımlanmış bir eylemi
+        uses: actions/checkout@v2
 
       - name: Get Current Directory
         run: |
           current_directory=$(pwd)
           echo "Current Directory: $current_directory"
-          
-          # Değişiklikleri çek ve .env.example dosyasını güncelle
-          git -C "$current_directory" fetch origin ${{ github.event.pull_request.head.ref }}
-          git -C "$current_directory" checkout ${{ github.event.pull_request.head.ref }}
-          git -C "$current_directory" merge-base main ${{ github.event.pull_request.head.ref }} > merge_base.txt
-          merge_base=$(cat merge_base.txt)
-
-          # .env.example dosyasının bulunması gereken dizini belirtin (dizin adını değiştirmeniz gerekiyor)
-          env_example_dir="$current_directory"
 
           # .env.example dosyasını kontrol et veya oluştur
-          if [ ! -f "$env_example_dir/.env.example" ]; then
-            touch "$env_example_dir/.env.example"
+          if [ ! -f "$current_directory/.env.example" ]; then
+            touch "$current_directory/.env.example"
           fi
 
-          # PR branch'i ile main branch'i arasındaki farkı çek
-          pr_diff=$(git -C "$current_directory" diff --name-only main...${{ github.event.pull_request.head.ref }})
-
           # PR içeriğindeki dosyaları işle
-          for file in $pr_diff; do
-            # Dosya içeriğini kontrol et
-            file_content=$(<"$env_example_dir/$file")
+          pr_diff=$(git diff --name-only HEAD^)
 
-            # Dosya içeriğindeki process.env değerlerini bul
+          # PR içeriğindeki dosyalarda process.env değerlerini ara
+          for file in $pr_diff; do
+            file_content=$(<"$current_directory/$file")
             process_env_values=$(echo "$file_content" | grep -Eo 'process\.env\.[A-Za-z_][A-Za-z_0-9]*')
 
-            # Her bir process.env değerini kontrol et
             for value in $process_env_values; do
-              # Değer .env.example dosyasında eksikse veya farklısa, .env.example dosyasını ekler veya günceller
-              if [[ ! $env_example_content == *"$value"* ]]; then
-                # Değerin başka bir değerle değiştirilip değiştirilmediğini kontrol et
-                if [[ $env_example_content == *"$value"* ]]; then
-                  # Değer aynı, bu yüzden güncelleme yapmaya gerek yok
-                  continue
-                fi
-                # Değeri .env.example dosyasına ekler veya günceller
-                sed -i "/$value/c$value=<default_value>" "$env_example_dir/.env.example"
+              # Değer .env.example dosyasında eksikse veya farklısa, .env.example dosyasını güncelle
+              if ! grep -q "$value" "$current_directory/.env.example"; then
+                sed -i "/$value/c$value=<default_value>" "$current_directory/.env.example"
               fi
             done
           done
 
       - name: Commit and Push Changes
         run: |
-          if [ -n "$(git -C "$env_example_dir" status --porcelain)" ]; then
-            git -C "$env_example_dir" add "$env_example_dir/.env.example"
-            git -C "$env_example_dir" commit -m "Update .env.example"
-            git -C "$env_example_dir" push origin ${{ github.event.pull_request.head.ref }}
+          if [ -n "$(git status --porcelain)" ]; then
+            git add "$current_directory/.env.example"
+            git commit -m "Update .env.example"
+            git push
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
