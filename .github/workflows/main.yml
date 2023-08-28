@@ -55,10 +55,17 @@ jobs:
             git commit -m "Update .env.example"
           fi
 
-      - name: Push Changes
+      - name: Create and Checkout a New Branch
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-            git push origin HEAD
+            git checkout -b feature/update-env-example
+          fi
+
+      - name: Push Changes and Create PR
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git push origin feature/update-env-example
+            gh pr create --base main --head feature/update-env-example --title "Update .env.example" --body "This PR updates the .env.example file."
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
