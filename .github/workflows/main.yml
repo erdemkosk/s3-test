@@ -38,7 +38,7 @@ jobs:
           fi
 
           # PR branch'i ile main branch'i arasındaki farkı çek
-          pr_diff=$(git -C "$current_directory" diff --name-only "$merge_base")
+          pr_diff=$(git -C "$current_directory" diff --name-only main...${{ github.event.pull_request.head.ref }})
 
           # PR içeriğindeki dosyaları işle
           for file in $pr_diff; do
