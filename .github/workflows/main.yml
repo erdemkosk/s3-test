@@ -28,35 +28,32 @@ jobs:
           echo "Current Directory: $current_directory"
 
           # .env.example dosyasını kontrol et veya oluştur
-          if [ ! -f "$current_directory/.env.example" ]; then
-            touch "$current_directory/.env.example"
+          if [ ! -f ".env.example" ]; then
+            touch ".env.example"
           fi
-
-          # .env.example dosyasının bulunması gereken dizini belirtin (dizin adını değiştirmeniz gerekiyor)
-          env_example_dir="$current_directory"
 
           # Değiştirilen dosyaları al
           changed_files="${{ steps.changed-files.outputs.all }}"
           
           # Değiştirilen dosyalarda process.env değerlerini ara
           for file in $changed_files; do
-            file_content=$(<"$env_example_dir/$file")
+            file_content=$(<"$current_directory/$file")
             process_env_values=$(echo "$file_content" | grep -Eo 'process\.env\.[A-Za-z_][A-Za-z_0-9]*')
 
             for value in $process_env_values; do
               # Değer .env.example dosyasında eksikse veya farklısa, .env.example dosyasını güncelle
-              if ! grep -q "$value" "$env_example_dir/.env.example"; then
-                sed -i "/$value/c$value=<default_value>" "$env_example_dir/.env.example"
+              if ! grep -q "$value" ".env.example"; then
+                sed -i "/$value/c$value=<default_value>" ".env.example"
               fi
             done
           done
 
       - name: Commit and Push Changes
         run: |
-          if [ -n "$(git -C "$env_example_dir" status --porcelain)" ]; then
-            git -C "$env_example_dir" add "$env_example_dir/.env.example"
-            git -C "$env_example_dir" commit -m "Update .env.example"
-            git -C "$env_example_dir" push origin ${{ github.event.pull_request.head.ref }}
+          if [ -n "$(git status --porcelain)" ]; then
+            git add ".env.example"
+            git commit -m "Update .env.example"
+            git push
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
