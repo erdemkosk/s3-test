@@ -4,6 +4,7 @@ const path = require('path');
 const express = require('express');
 const { errors } = require('celebrate');
 const config = require('./config');
+const baba = process.env.BABA;
 
 const errorMiddleware = require('./api/middleware/error');
 const { getLanguageFromRequest } = require('./api/middleware/language');
